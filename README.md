@@ -77,7 +77,7 @@ install.packages(packages[!packages %in% installed.packages()])
 #### Option 1: Command Line Interface
 ```r
 # Source the main simulation
-source("Mosquito_Bites.R")
+source("mosquite_bites.R")
 
 # Run basic simulation
 results <- run_simulation()
