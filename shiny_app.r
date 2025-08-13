@@ -6,13 +6,13 @@ library(shinydashboard)
 library(DT)
 library(plotly)
 
-# Source the main simulation (make sure mosquito_simulation.R is in same directory)
-# source("mosquito_simulation.R")
+# Source the main simulation (make sure mosquito_bites.R is in same directory)
+# source("mosquito_bites.R")
 
 # Define UI
 ui <- dashboardPage(
   dashboardHeader(title = "Mosquito Bite Simulation"),
-  
+
   dashboardSidebar(
     sidebarMenu(
       menuItem("Environment", tabName = "environment", icon = icon("home")),
@@ -22,7 +22,7 @@ ui <- dashboardPage(
       menuItem("Sensitivity", tabName = "sensitivity", icon = icon("search"))
     )
   ),
-  
+
   dashboardBody(
     tabItems(
       # Environment tab
@@ -41,7 +41,7 @@ ui <- dashboardPage(
           )
         )
       ),
-      
+
       # Parameters tab
       tabItem(tabName = "parameters",
         fluidRow(
@@ -61,7 +61,7 @@ ui <- dashboardPage(
         ),
         fluidRow(
           box(width = 12, title = "People Settings", status = "info", solidHeader = TRUE,
-            column(3, 
+            column(3,
               h5("Person N1 (House 1)"),
               numericInput("n1_skin", "Skin Area:", value = 100, min = 50, max = 150)
             ),
@@ -80,7 +80,7 @@ ui <- dashboardPage(
           )
         )
       ),
-      
+
       # Simulation tab
       tabItem(tabName = "simulation",
         fluidRow(
@@ -91,7 +91,7 @@ ui <- dashboardPage(
           )
         )
       ),
-      
+
       # Results tab
       tabItem(tabName = "results",
         fluidRow(
@@ -113,7 +113,7 @@ ui <- dashboardPage(
           )
         )
       ),
-      
+
       # Sensitivity Analysis tab
       tabItem(tabName = "sensitivity",
         fluidRow(
@@ -142,7 +142,7 @@ server <- function(input, output, session) {
   # Reactive values to store simulation results
   sim_results <- reactiveVal(NULL)
   sensitivity_results <- reactiveVal(NULL)
-  
+
   # Create reactive parameter set
   current_params <- reactive({
     params <- default_params
@@ -155,21 +155,21 @@ server <- function(input, output, session) {
     params$bite_range <- input$bite_range
     params$window_entry_range <- input$window_range
     params$reproduction_cooldown <- input$repro_cooldown
-    
+
     # Update people parameters
     params$people$N1$skin_area <- input$n1_skin
     params$people$N2$skin_area <- input$n2_skin
     params$people$N3$skin_area <- input$n3_skin
     params$people$N4$skin_area <- input$n4_skin
-    
+
     return(params)
   })
-  
+
   # Environment plot
   output$env_plot <- renderPlot({
     plot_environment(current_params())
   })
-  
+
   # Environment info
   output$env_info <- renderText({
     params <- current_params()
@@ -182,7 +182,7 @@ server <- function(input, output, session) {
       "Simulation Time:", params$simulation_time, "steps"
     )
   })
-  
+
   # People table
   output$people_table <- DT::renderDataTable({
     params <- current_params()
@@ -196,11 +196,11 @@ server <- function(input, output, session) {
     )
     DT::datatable(people_df, options = list(pageLength = 4, dom = 't'))
   })
-  
+
   # Run simulation
   observeEvent(input$run_sim, {
     output$sim_status <- renderText("Running simulation... Please wait.")
-    
+
     # Run simulation with current parameters
     withProgress(message = 'Running simulation...', value = 0, {
       incProgress(0.5, detail = "Initializing mosquitoes...")
@@ -208,11 +208,11 @@ server <- function(input, output, session) {
       incProgress(1, detail = "Complete!")
       sim_results(results)
     })
-    
+
     output$sim_status <- renderText({
       results <- sim_results()
       if (is.null(results)) return("No simulation run yet.")
-      
+
       paste(
         "Simulation completed!\n",
         "Total bites:", nrow(results$bite_log), "\n",
@@ -221,97 +221,97 @@ server <- function(input, output, session) {
       )
     })
   })
-  
+
   # Bite distribution plot
   output$bite_plot <- renderPlotly({
     results <- sim_results()
     if (is.null(results) || nrow(results$bite_log) == 0) {
-      p <- ggplot() + 
+      p <- ggplot() +
         annotate("text", x = 0.5, y = 0.5, label = "No data available", size = 6) +
         theme_void()
       return(ggplotly(p))
     }
-    
+
     bite_counts <- results$bite_log %>%
       group_by(person) %>%
       summarise(bites = n(), .groups = 'drop')
-    
+
     p <- ggplot(bite_counts, aes(x = person, y = bites, fill = person)) +
       geom_col() +
       scale_fill_viridis_d() +
       labs(title = "Total Bites per Person", x = "Person", y = "Number of Bites") +
       theme_minimal() +
       theme(legend.position = "none")
-    
+
     ggplotly(p)
   })
-  
+
   # Population plot
   output$population_plot <- renderPlotly({
     results <- sim_results()
     if (is.null(results)) {
-      p <- ggplot() + 
+      p <- ggplot() +
         annotate("text", x = 0.5, y = 0.5, label = "No data available", size = 6) +
         theme_void()
       return(ggplotly(p))
     }
-    
+
     p <- ggplot(results$population_log, aes(x = time, y = count)) +
       geom_line(color = "darkgreen", size = 1) +
       labs(title = "Mosquito Population Over Time", x = "Time Step", y = "Number of Mosquitoes") +
       theme_minimal()
-    
+
     ggplotly(p)
   })
-  
+
   # Timeline plot
   output$timeline_plot <- renderPlotly({
     results <- sim_results()
     if (is.null(results) || nrow(results$bite_log) == 0) {
-      p <- ggplot() + 
+      p <- ggplot() +
         annotate("text", x = 0.5, y = 0.5, label = "No bite data available", size = 6) +
         theme_void()
       return(ggplotly(p))
     }
-    
+
     bite_timeline <- results$bite_log %>%
       mutate(time_bin = floor(time / 50) * 50) %>%
       group_by(time_bin, person) %>%
       summarise(bites = n(), .groups = 'drop')
-    
+
     p <- ggplot(bite_timeline, aes(x = time_bin, y = bites, color = person)) +
       geom_line() +
       geom_point() +
       scale_color_viridis_d() +
       labs(title = "Bites Over Time", x = "Time Step", y = "Bites per 50 time steps") +
       theme_minimal()
-    
+
     ggplotly(p)
   })
-  
+
   # Bite table
   output$bite_table <- DT::renderDataTable({
     results <- sim_results()
     if (is.null(results) || nrow(results$bite_log) == 0) {
       return(DT::datatable(data.frame(Message = "No bite data available")))
     }
-    
+
     bite_data <- results$bite_log %>%
       mutate(
         mosquito_x = round(mosquito_x, 2),
         mosquito_y = round(mosquito_y, 2)
       )
-    
+
     DT::datatable(bite_data, options = list(pageLength = 10, scrollX = TRUE))
   })
-  
+
   # Run sensitivity analysis
   observeEvent(input$run_sensitivity, {
     output$sensitivity_status <- renderText("Running parameter sensitivity analysis... This may take several minutes.")
-    
+
     withProgress(message = 'Running sensitivity analysis...', value = 0, {
       incProgress(0.2, detail = "Testing speed parameter...")
-      
+
       # Custom sensitivity analysis for Shiny
       test_params <- list(
         v = seq(1, 4, by = 0.5),      # speed
@@ -319,30 +319,30 @@ server <- function(input, output, session) {
         Y = c(1, 2, 3, 4, 5),         # offspring per bite
         M = seq(20, 80, by = 30)      # initial mosquito count (reduced for speed)
       )
-      
+
       results_sensitivity <- data.frame()
       total_tests <- sum(sapply(test_params, length))
       current_test <- 0
-      
+
       for (param_name in names(test_params)) {
         for (param_value in test_params[[param_name]]) {
           current_test <- current_test + 1
           incProgress(0.8/total_tests, detail = paste("Testing", param_name, "=", param_value))
-          
+
           # Create modified parameters
           test_param_set <- default_params
           test_param_set[[param_name]] <- param_value
           test_param_set$simulation_time <- 300  # shorter for sensitivity analysis
-          
+
           # Run simulation
           sim_result <- run_simulation(test_param_set)
-          
+
           # Calculate metrics
           total_bites <- nrow(sim_result$bite_log)
           bite_distribution <- sim_result$bite_log %>%
             group_by(person) %>%
             summarise(bites = n(), .groups = 'drop')
-          
+
           # Add results
           result_row <- data.frame(
             parameter = param_name,
@@ -352,32 +352,32 @@ server <- function(input, output, session) {
             final_mosquito_count = length(sim_result$final_mosquitoes),
             stringsAsFactors = FALSE
           )
-          
+
           results_sensitivity <- rbind(results_sensitivity, result_row)
         }
       }
-      
+
       incProgress(1, detail = "Analysis complete!")
       sensitivity_results(results_sensitivity)
     })
-    
+
     output$sensitivity_status <- renderText({
       results <- sensitivity_results()
       if (is.null(results)) return("No sensitivity analysis run yet.")
       paste("Sensitivity analysis completed with", nrow(results), "parameter combinations tested.")
     })
   })
-  
+
   # Sensitivity bites plot
   output$sensitivity_bites_plot <- renderPlotly({
     results <- sensitivity_results()
     if (is.null(results)) {
-      p <- ggplot() + 
+      p <- ggplot() +
         annotate("text", x = 0.5, y = 0.5, label = "Run sensitivity analysis first", size = 6) +
         theme_void()
       return(ggplotly(p))
     }
-    
+
     p <- ggplot(results, aes(x = value, y = total_bites, color = parameter)) +
       geom_line() +
       geom_point() +
@@ -386,20 +386,20 @@ server <- function(input, output, session) {
            x = "Parameter Value", y = "Total Bites") +
       theme_minimal() +
       theme(legend.position = "none")
-    
+
     ggplotly(p)
   })
-  
+
   # Sensitivity population plot
   output$sensitivity_pop_plot <- renderPlotly({
     results <- sensitivity_results()
     if (is.null(results)) {
-      p <- ggplot() + 
+      p <- ggplot() +
         annotate("text", x = 0.5, y = 0.5, label = "Run sensitivity analysis first", size = 6) +
         theme_void()
       return(ggplotly(p))
     }
-    
+
     p <- ggplot(results, aes(x = value, y = final_mosquito_count, color = parameter)) +
       geom_line() +
       geom_point() +
@@ -408,12 +408,12 @@ server <- function(input, output, session) {
            x = "Parameter Value", y = "Final Mosquito Count") +
       theme_minimal() +
       theme(legend.position = "none")
-    
+
     ggplotly(p)
   })
 }
 
-# Run the application 
+# Run the application
 # shinyApp(ui = ui, server = server)
 
 # To run the app, save this file as "shiny_app.R" and use:

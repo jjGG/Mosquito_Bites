@@ -4,7 +4,7 @@ packages <- c("ggplot2", "dplyr", "gridExtra", "viridis", "plotly",
 install.packages(packages[!packages %in% installed.packages()])
 
 # Load and run basic simulation
-source("mosquito_simulation.R")
+source("mosquito_bites.R")
 results <- run_simulation()
 plot_environment(default_params)
 plot_bite_analysis(results)
