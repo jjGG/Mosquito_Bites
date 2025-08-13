@@ -7,9 +7,9 @@ This R project simulates mosquito behavior and bite patterns in a 2D environment
 ## Project Structure
 
 ```
-mosquito_simulation/
+mosquito_bites/
 ├── Mosquito_Bites.Rproj    # R Project file
-├── Mosquito_Bites.R        # Main simulation code
+├── mosquito_bites.R        # Main simulation code
 ├── shiny_app.R                 # Interactive Shiny interface
 ├── README.md                   # This file
 ├── example_analysis.R          # Example usage scripts
