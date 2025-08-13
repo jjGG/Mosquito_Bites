@@ -1,0 +1,25 @@
+Project: Mosquite bite simulation
+
+Structure: all programming and visualisation in R.
+
+Idea behind:
+I would like to evaluate what parameter influences most the bites of mosquitoes. 
+
+My idea is the following:
+- we have M mosquitoes to start with and they have to feed (sting someone) within a time t in order to survive. 
+- if a mosquito bites someone, they will produce Y offspring everytime they are successful
+- a mosquito has a parameter speed (v) how fast it can fly around (by default in a random fashion)
+- furthermore there is a parameter (l) how much it is attracted by light and would try to go close to a light source
+- Then we have an area (A) which can be two dimensional and square or rectangular where the mosquitoes can fly (move in 2D)
+- in the area there two houses (other smaller boxes) that have some openings (windows of size w) where mosquitoes can maybe enter if they are close enough to the "hole". 
+- in one of the houses there is a light source that can attract mosquitoes.
+- in the whole area we have 4 people (N1-N4). These people all have a skin area (s) where they can get bitten if a mosquito is close enough. Two of these people in any of the houses. Two of these people are outside while one of them is covered by some clothes and therefore has a reduced area (s). 
+
+Objective:
+- I want to play around with my parameters and see in the end how much each parameter can influence the number of bites for each of the people. 
+- ideally this can be visualised in a clever way. 
+
+I am totally open for improvements and other ideas what parameters I should still include. 
+
+Go ahead and write me all the code in R for this. Ideally all packed in an R-project. 
+
