@@ -20,7 +20,7 @@ mosquito_bites/
 
 ## Files Description
 
-### 1. Mosquito_Bites.R
+### 1. mosquito_bites.R
 The main simulation engine containing:
 - **Environment setup**: 2D area with houses, windows, light sources
 - **Mosquito behavior**: Movement, feeding, reproduction, survival
